@@ -1,0 +1,41 @@
+# 忽略文件列表
+
+# Composer
+/vendor/
+composer.lock
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+runtime/
+cache/
+
+# Test
+.phpunit.result.cache
+coverage/
+
+# Environment
+.env
+.env.local
+.env.test
+
+# Temporary files
+tmp/
+temp/
+
+# 敏感配置文件
+Microsoft_check/test-config.php
+Microsoft_check/config-local.php

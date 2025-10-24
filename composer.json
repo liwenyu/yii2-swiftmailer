@@ -1,0 +1,48 @@
+{
+    "name": "liwenyu/yii2-swiftmailer",
+    "description": "Yii2 extension for Microsoft mail sending functionality based on yii2-swiftmailer",
+    "type": "yii2-extension",
+    "keywords": ["yii2", "extension", "microsoft", "mail", "email", "office365", "outlook"],
+    "license": "MIT",
+    "support": {
+        "issues": "https://github.com/liwenyu/yii2-swiftmailer/issues",
+        "source": "https://github.com/liwenyu/yii2-swiftmailer"
+    },
+    "authors": [
+        {
+            "name": "liwenyu",
+            "email": "liwenyu66@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "yiisoft/yii2": "~2.0.0",
+        "yiisoft/yii2-swiftmailer": "~2.1.0",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "yiisoft/yii2-coding-standards": "^1.0",
+        "phpstan/phpstan": "^1.0",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "coverage": "phpunit --coverage-clover coverage.xml",
+        "cs-fix": "php-cs-fixer fix",
+        "stan": "phpstan analyse src --level=5"
+    },
+    "autoload": {
+        "psr-4": {
+            "liwenyu\\swiftmailer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "liwenyu\\swiftmailer\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "bootstrap": "liwenyu\\swiftmailer\\Bootstrap"
+    }
+}
