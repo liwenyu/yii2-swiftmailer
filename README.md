@@ -1,12 +1,5 @@
 # Yii2 Mailer Extension
 
-[![Latest Stable Version](https://img.shields.io/packagist/v/liwenyu/yii2-swiftmailer.svg)](https://packagist.org/packages/liwenyu/yii2-swiftmailer)
-[![Total Downloads](https://img.shields.io/packagist/dt/liwenyu/yii2-swiftmailer.svg)](https://packagist.org/packages/liwenyu/yii2-swiftmailer)
-[![Build Status](https://github.com/liwenyu/yii2-swiftmailer/workflows/CI/badge.svg)](https://github.com/liwenyu/yii2-swiftmailer/actions)
-[![Code Coverage](https://codecov.io/gh/liwenyu/yii2-swiftmailer/branch/main/graph/badge.svg)](https://codecov.io/gh/liwenyu/yii2-swiftmailer)
-[![PHP Version](https://img.shields.io/packagist/php-v/liwenyu/yii2-swiftmailer.svg)](https://packagist.org/packages/liwenyu/yii2-swiftmailer)
-[![License](https://img.shields.io/packagist/l/liwenyu/yii2-swiftmailer.svg)](https://packagist.org/packages/liwenyu/yii2-swiftmailer)
-
 基于 yii2-swiftmailer 的 Yii2 扩展，实现微软邮件发送功能。
 
 ## 功能特性
@@ -130,22 +123,9 @@ composer require liwenyu/yii2-swiftmailer
 
 ### 2. 更新配置
 
-#### 方式一：使用 Microsoft Graph API（推荐）
+#### 使用 Microsoft Graph API（推荐）
 
 ```php
-// 原来的配置
-'mailer' => [
-    'class' => 'yii\swiftmailer\Mailer',
-    'transport' => [
-        'class' => 'Swift_SmtpTransport',
-        'host' => 'smtp.gmail.com',
-        'username' => 'your-email@gmail.com',
-        'password' => 'your-password',
-        'port' => '587',
-        'encryption' => 'tls',
-    ],
-],
-
 // 新的配置 - Microsoft Graph API
 'mailer' => [
     'class' => 'liwenyu\swiftmailer\Mailer',
@@ -159,22 +139,9 @@ composer require liwenyu/yii2-swiftmailer
 ],
 ```
 
-#### 方式二：继续使用 SMTP 传输
+#### 继续使用 SMTP 传输
 
 ```php
-// 原来的配置
-'mailer' => [
-    'class' => 'yii\swiftmailer\Mailer',
-    'transport' => [
-        'class' => 'Swift_SmtpTransport',
-        'host' => 'smtp.gmail.com',
-        'username' => 'your-email@gmail.com',
-        'password' => 'your-password',
-        'port' => '587',
-        'encryption' => 'tls',
-    ],
-],
-
 // 新的配置 - 继续使用 SMTP
 'mailer' => [
     'class' => 'liwenyu\swiftmailer\Mailer',
@@ -269,13 +236,13 @@ composer require liwenyu/yii2-swiftmailer
 
 ### 1. 在应用配置中注册组件
 
-#### 方式一：使用 Microsoft Graph API（推荐）
+#### 使用 Microsoft Graph API（推荐）
 
 ```php
 // config/web.php 或 config/console.php
 return [
     'components' => [
-        'microsoftMail' => [
+        'mailer' => [
             'class' => 'liwenyu\swiftmailer\Mailer',
             'config' => [
                 'class' => 'liwenyu\swiftmailer\MicrosoftMailConfig',
@@ -290,13 +257,13 @@ return [
 ];
 ```
 
-#### 方式二：使用 SMTP 传输
+#### 使用 SMTP 传输
 
 ```php
 // config/web.php 或 config/console.php
 return [
     'components' => [
-        'microsoftMail' => [
+        'mailer' => [
             'class' => 'liwenyu\swiftmailer\Mailer',
             'useSmtp' => true, // 启用 SMTP 模式
             'transport' => [
@@ -341,7 +308,7 @@ return [
 use Yii;
 
 // 发送简单邮件
-$result = Yii::$app->microsoftMail->sendSimpleMail(
+$result = Yii::$app->mailer->sendSimpleMail(
     'recipient@example.com',
     '邮件主题',
     '<h1>Hello World!</h1><p>这是一封测试邮件。</p>',
@@ -360,7 +327,7 @@ if ($result) {
 ```php
 use Yii;
 
-$message = Yii::$app->microsoftMail->compose()
+$message = Yii::$app->mailer->compose()
     ->setFrom('sender@yourdomain.com')
     ->setTo('recipient@example.com')
     ->setCc('cc@example.com')
@@ -371,7 +338,7 @@ $message = Yii::$app->microsoftMail->compose()
     ->attachFile('/path/to/file.pdf')
     ->attach('custom.txt', '自定义内容', 'text/plain');
 
-$result = Yii::$app->microsoftMail->send($message);
+$result = Yii::$app->mailer->send($message);
 ```
 
 ### 批量发送邮件
@@ -385,7 +352,7 @@ $recipients = [
     'user3@example.com',
 ];
 
-$results = Yii::$app->microsoftMail->sendBulkMail(
+$results = Yii::$app->mailer->sendBulkMail(
     $recipients,
     '批量邮件主题',
     '<p>这是批量发送的邮件内容。</p>',
@@ -405,7 +372,7 @@ use liwenyu\swiftmailer\GraphApiService;
 
 // 创建 Graph API 服务实例
 $graphService = new GraphApiService([
-    'config' => Yii::$app->microsoftMail->config,
+    'config' => Yii::$app->mailer->config,
 ]);
 
 // 测试连接
@@ -440,14 +407,14 @@ $graphService->deleteMessage('message-id');
 ```php
 use Yii;
 
-$message = Yii::$app->microsoftMail->compose('welcome-email', [
+$message = Yii::$app->mailer->compose('welcome-email', [
     'userName' => '张三',
     'activationLink' => 'https://example.com/activate?token=123',
 ])
     ->setTo('user@example.com')
     ->setSubject('欢迎注册！');
 
-Yii::$app->microsoftMail->send($message);
+Yii::$app->mailer->send($message);
 ```
 
 对应的视图文件 `views/mail/welcome-email.php`：
@@ -491,7 +458,7 @@ $draftData = [
 ];
 
 $graphService = new GraphApiService([
-    'config' => Yii::$app->microsoftMail->config,
+    'config' => Yii::$app->mailer->config,
 ]);
 
 $draft = $graphService->createDraft($draftData);
@@ -526,7 +493,7 @@ try {
     }
 
     // 发送邮件
-    $result = Yii::$app->microsoftMail->sendSimpleMail(
+    $result = Yii::$app->mailer->sendSimpleMail(
         'recipient@example.com',
         '测试邮件',
         '测试内容'
@@ -587,8 +554,8 @@ try {
 启用调试模式可以查看详细的请求和响应信息：
 
 ```php
-'microsoftMail' => [
-    'class' => 'YourVendor\Yii2MicrosoftMail\Mailer',
+'mailer' => [
+    'class' => 'liwenyu\swiftmailer\Mailer',
     'config' => [
         // ... 配置选项
     ],
