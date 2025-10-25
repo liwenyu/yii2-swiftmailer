@@ -66,6 +66,17 @@ class Mailer extends BaseMailer
             $this->setTransport($this->transport);
         } else {
             // 使用 Microsoft Graph API
+            if (empty($this->config)) {
+                throw new InvalidConfigException('使用 Microsoft Graph API 模式时，config 配置不能为空');
+            }
+            
+            // 如果 config 是数组，自动实例化为 MicrosoftMailConfig 对象
+            if (is_array($this->config)) {
+                $this->config = Yii::createObject(array_merge([
+                    'class' => MicrosoftMailConfig::class,
+                ], $this->config));
+            }
+            
             if (!$this->config instanceof MicrosoftMailConfig) {
                 throw new InvalidConfigException('使用 Microsoft Graph API 模式时，config 必须是 MicrosoftMailConfig 的实例');
             }
