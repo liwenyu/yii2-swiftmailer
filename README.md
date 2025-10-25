@@ -42,7 +42,7 @@
 
 #### 3. 附件功能
 
-- ✅ **文件附件** - `attachFile($filePath, $fileName)`
+- ✅ **文件附件** - `attachFile($filePath, $options)`
 - ✅ **内容附件** - `attach($fileName, $content, $contentType)`
 - ✅ **嵌入图片** - `embed($filePath, $cid)`
 - ✅ **嵌入内容** - `embedContent($content, $contentType, $cid)`

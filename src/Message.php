@@ -259,23 +259,26 @@ class Message extends BaseMessage
     }
 
     /**
-     * 添加文件附件
+     * 添加文件附件 - 兼容官方 yii2-swiftmailer
      * 
      * @param string $filePath 文件路径
-     * @param string $fileName 文件名（可选）
+     * @param array $options 选项数组，包含fileName等
      * @return $this
      */
-    public function attachFile($filePath, $fileName = null)
+    public function attachFile($filePath, array $options = [])
     {
         if (!file_exists($filePath)) {
             throw new \InvalidArgumentException("文件不存在: {$filePath}");
         }
         
-        $fileName = $fileName ?: basename($filePath);
+        $fileName = $options['fileName'] ?? basename($filePath);
         $content = file_get_contents($filePath);
-        $contentType = $this->getContentTypeFromFileName($fileName);
+        $contentType = $options['contentType'] ?? $this->getContentTypeFromFileName($fileName);
         
-        return $this->attach($fileName, $content, $contentType);
+        return $this->attach($fileName, [
+            'content' => $content,
+            'contentType' => $contentType,
+        ]);
     }
 
     /**
@@ -357,22 +360,26 @@ class Message extends BaseMessage
     }
 
     /**
-     * 添加嵌入图片
+     * 添加嵌入图片 - 兼容官方 yii2-swiftmailer
      * 
-     * @param string $filePath 图片文件路径
-     * @param string $cid 内容ID
+     * @param string $fileName 文件名或文件路径
+     * @param array $options 选项数组，包含cid等
      * @return $this
      */
-    public function embed($filePath, $cid = null)
+    public function embed($fileName, array $options = [])
     {
-        if (!file_exists($filePath)) {
-            throw new \InvalidArgumentException("文件不存在: {$filePath}");
+        $cid = $options['cid'] ?? 'cid_' . uniqid();
+        
+        // 如果是文件路径，读取文件内容
+        if (file_exists($fileName)) {
+            $content = file_get_contents($fileName);
+            $fileName = basename($fileName);
+        } else {
+            // 如果不存在，可能是通过其他方式提供的内容
+            $content = $options['content'] ?? '';
         }
         
-        $cid = $cid ?: 'cid_' . uniqid();
-        $fileName = basename($filePath);
-        $content = file_get_contents($filePath);
-        $contentType = $this->getContentTypeFromFileName($fileName);
+        $contentType = $options['contentType'] ?? $this->getContentTypeFromFileName($fileName);
         
         $this->_attachments[] = [
             'fileName' => $fileName,
@@ -386,7 +393,8 @@ class Message extends BaseMessage
     }
 
     /**
-     * 添加嵌入内容
+     * 添加嵌入内容 - 兼容官方 yii2-swiftmailer
+     * 使用 embed 方法来实现嵌入内容功能
      * 
      * @param string $content 内容
      * @param string $contentType 内容类型
@@ -395,17 +403,12 @@ class Message extends BaseMessage
      */
     public function embedContent($content, $contentType, $cid = null)
     {
-        $cid = $cid ?: 'cid_' . uniqid();
-        
-        $this->_attachments[] = [
-            'fileName' => 'embedded_' . $cid,
+        // 使用标准的 embed 方法来实现嵌入内容
+        return $this->embed('embedded_content', [
             'content' => $content,
             'contentType' => $contentType,
             'cid' => $cid,
-            'isEmbedded' => true,
-        ];
-        
-        return $this;
+        ]);
     }
 
     /**

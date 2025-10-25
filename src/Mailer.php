@@ -423,6 +423,17 @@ class Mailer extends BaseMailer
     }
 
     /**
+     * 发送邮件 - 兼容官方 yii2-swiftmailer
+     * 
+     * @param MessageInterface $message
+     * @return bool
+     */
+    public function send($message)
+    {
+        return $this->sendMessage($message);
+    }
+
+    /**
      * 发送简单邮件
      * 
      * @param string $to 收件人
