@@ -218,19 +218,41 @@ class Message extends BaseMessage
     }
 
     /**
+     * 获取HTML内容
+     * 
+     * @return string
+     */
+    public function getHtmlBody()
+    {
+        return $this->_htmlBody;
+    }
+
+    /**
+     * 获取文本内容
+     * 
+     * @return string
+     */
+    public function getTextBody()
+    {
+        return $this->_textBody;
+    }
+
+    /**
      * 添加附件
      * 
      * @param string $fileName 文件名
-     * @param string $content 文件内容
-     * @param string $contentType 内容类型
+     * @param array $options 选项数组，包含content和contentType
      * @return $this
      */
-    public function attach($fileName, $content, $contentType = null)
+    public function attach($fileName, array $options = [])
     {
+        $content = $options['content'] ?? '';
+        $contentType = $options['contentType'] ?? $this->getContentTypeFromFileName($fileName);
+        
         $this->_attachments[] = [
             'fileName' => $fileName,
             'content' => $content,
-            'contentType' => $contentType ?: $this->getContentTypeFromFileName($fileName),
+            'contentType' => $contentType,
         ];
         
         return $this;

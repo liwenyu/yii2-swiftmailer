@@ -43,6 +43,11 @@ class Mailer extends BaseMailer
      * @var bool 是否使用 SMTP 传输（而不是 Microsoft Graph API）
      */
     public $useSmtp = false;
+    
+    /**
+     * @var \Swift_Transport|array Swift transport instance or its array configuration.
+     */
+    private $_transport;
 
     /**
      * @inheritdoc
@@ -68,16 +73,181 @@ class Mailer extends BaseMailer
     }
 
     /**
+     * 设置传输配置
+     * 
+     * @param array|\Swift_Transport $transport
+     * @throws InvalidConfigException on invalid argument.
+     */
+    public function setTransport($transport)
+    {
+        if (!is_array($transport) && !is_object($transport)) {
+            throw new InvalidConfigException('"' . get_class($this) . '::transport" should be either object or array, "' . gettype($transport) . '" given.');
+        }
+        $this->_transport = $transport;
+    }
+
+    /**
+     * 获取传输实例
+     * 
+     * @return \Swift_Transport
+     */
+    public function getTransport()
+    {
+        if (!is_object($this->_transport)) {
+            $this->_transport = $this->createTransport($this->_transport);
+        }
+
+        return $this->_transport;
+    }
+
+    /**
+     * 创建传输实例
+     * 
+     * @param array $config
+     * @return \Swift_Transport
+     * @throws InvalidConfigException
+     */
+    protected function createTransport($config)
+    {
+        if (is_array($config)) {
+            if (!isset($config['class'])) {
+                throw new InvalidConfigException('The "class" property must be set for transport.');
+            }
+            
+            $class = $config['class'];
+            unset($config['class']);
+            
+            $constructArgs = isset($config['constructArgs']) ? $config['constructArgs'] : [];
+            unset($config['constructArgs']);
+            
+            $transport = new $class(...$constructArgs);
+            
+            // 设置传输属性
+            foreach ($config as $name => $value) {
+                if (property_exists($transport, $name)) {
+                    $transport->$name = $value;
+                } elseif (method_exists($transport, 'set' . ucfirst($name))) {
+                    $transport->{'set' . ucfirst($name)}($value);
+                }
+            }
+            
+            return $transport;
+        }
+        
+        return $config;
+    }
+
+    /**
      * @inheritdoc
      */
     protected function sendMessage($message)
     {
         if ($this->useSmtp) {
-            // 使用 SMTP 传输（调用父类方法）
-            return parent::sendMessage($message);
+            // 使用 SMTP 传输
+            return $this->sendViaSmtp($message);
         } else {
             // 使用 Microsoft Graph API
             return $this->sendViaGraphApi($message);
+        }
+    }
+
+    /**
+     * 通过 SMTP 发送邮件
+     * 
+     * @param MessageInterface $message
+     * @return bool
+     */
+    protected function sendViaSmtp($message)
+    {
+        try {
+            $transport = $this->getTransport();
+            $swiftMailer = new \Swift_Mailer($transport);
+            
+            // 创建 Swift_Message
+            $swiftMessage = new \Swift_Message();
+            $swiftMessage->setSubject($message->getSubject());
+            
+            // 设置邮件内容
+            if ($message->getHtmlBody()) {
+                $swiftMessage->setBody($message->getHtmlBody(), 'text/html');
+                if ($message->getTextBody()) {
+                    $swiftMessage->addPart($message->getTextBody(), 'text/plain');
+                }
+            } else {
+                $swiftMessage->setBody($message->getTextBody(), 'text/plain');
+            }
+            
+            // 设置发件人 - 必须与SMTP认证用户一致
+            $from = $message->getFrom();
+            $transportUsername = $transport->getUsername();
+            
+            if (!empty($from)) {
+                // 检查发件人是否与SMTP认证用户一致
+                $isAuthorizedSender = false;
+                if ($transportUsername) {
+                    foreach ($from as $email => $name) {
+                        if ($email === $transportUsername) {
+                            $isAuthorizedSender = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if ($isAuthorizedSender) {
+                    $swiftMessage->setFrom($from);
+                } else {
+                    // 使用SMTP认证用户作为发件人，但保留原始发件人信息
+                    $swiftMessage->setFrom([$transportUsername => '系统邮件']);
+                    // 在邮件内容中添加原始发件人信息
+                    $originalFrom = is_array($from) ? implode(', ', array_keys($from)) : $from;
+                    $body = $swiftMessage->getBody();
+                    $swiftMessage->setBody($body . "\n\n原始发件人: " . $originalFrom);
+                }
+            } else {
+                // 使用SMTP认证用户作为默认发件人
+                if ($transportUsername) {
+                    $swiftMessage->setFrom([$transportUsername => '系统邮件']);
+                }
+            }
+            
+            // 设置收件人
+            $to = $message->getTo();
+            if (!empty($to)) {
+                $swiftMessage->setTo($to);
+            }
+            
+            // 设置抄送
+            $cc = $message->getCc();
+            if (!empty($cc)) {
+                $swiftMessage->setCc($cc);
+            }
+            
+            // 设置密送
+            $bcc = $message->getBcc();
+            if (!empty($bcc)) {
+                $swiftMessage->setBcc($bcc);
+            }
+            
+            // 设置回复地址
+            $replyTo = $message->getReplyTo();
+            if (!empty($replyTo)) {
+                $swiftMessage->setReplyTo($replyTo);
+            }
+            
+            // 发送邮件
+            $result = $swiftMailer->send($swiftMessage);
+            
+            if ($result > 0) {
+                Yii::info('SMTP邮件发送成功，发送数量: ' . $result, __METHOD__);
+                return true;
+            } else {
+                Yii::error('SMTP邮件发送失败', __METHOD__);
+                return false;
+            }
+            
+        } catch (\Exception $e) {
+            Yii::error('SMTP邮件发送异常: ' . $e->getMessage(), __METHOD__);
+            return false;
         }
     }
 
