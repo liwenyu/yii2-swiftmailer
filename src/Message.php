@@ -244,7 +244,7 @@ class Message extends BaseMessage
      * @param array $options 选项数组，包含content和contentType
      * @return $this
      */
-    public function attach($fileName, array $options = [])
+    public function attach($fileName, $options = [])
     {
         $content = $options['content'] ?? '';
         $contentType = $options['contentType'] ?? $this->getContentTypeFromFileName($fileName);
@@ -265,7 +265,7 @@ class Message extends BaseMessage
      * @param array $options 选项数组，包含fileName等
      * @return $this
      */
-    public function attachFile($filePath, array $options = [])
+    public function attachFile($filePath, $options = [])
     {
         if (!file_exists($filePath)) {
             throw new \InvalidArgumentException("文件不存在: {$filePath}");
@@ -366,7 +366,7 @@ class Message extends BaseMessage
      * @param array $options 选项数组，包含cid等
      * @return $this
      */
-    public function embed($fileName, array $options = [])
+    public function embed($fileName, $options = [])
     {
         $cid = $options['cid'] ?? 'cid_' . uniqid();
         
@@ -393,16 +393,17 @@ class Message extends BaseMessage
     }
 
     /**
-     * 添加嵌入内容 - 兼容官方 yii2-swiftmailer
-     * 使用 embed 方法来实现嵌入内容功能
+     * 添加嵌入内容 - 兼容 yii\mail\MessageInterface
      * 
      * @param string $content 内容
-     * @param string $contentType 内容类型
-     * @param string $cid 内容ID
+     * @param array $options 选项数组，包含contentType和cid
      * @return $this
      */
-    public function embedContent($content, $contentType, $cid = null)
+    public function embedContent($content, $options = [])
     {
+        $contentType = $options['contentType'] ?? 'text/plain';
+        $cid = $options['cid'] ?? null;
+        
         // 使用标准的 embed 方法来实现嵌入内容
         return $this->embed('embedded_content', [
             'content' => $content,
