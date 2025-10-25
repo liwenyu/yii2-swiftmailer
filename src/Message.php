@@ -282,6 +282,24 @@ class Message extends BaseMessage
     }
 
     /**
+     * 添加内容附件 - 兼容 yii\mail\MessageInterface
+     * 
+     * @param string $content 内容
+     * @param array $options 选项数组，包含fileName和contentType
+     * @return $this
+     */
+    public function attachContent($content, $options = [])
+    {
+        $fileName = $options['fileName'] ?? 'attachment.txt';
+        $contentType = $options['contentType'] ?? 'text/plain';
+        
+        return $this->attach($fileName, [
+            'content' => $content,
+            'contentType' => $contentType,
+        ]);
+    }
+
+    /**
      * 获取附件列表
      * 
      * @return array
